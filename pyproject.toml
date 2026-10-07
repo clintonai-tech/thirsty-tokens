@@ -1,0 +1,26 @@
+[project]
+name = "thirsty-tokens"
+version = "0.1.0"
+description = "Compare LLMs on cost, speed, energy, carbon, and water."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+license = { text = "MIT" }
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.11"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["backend/src"]
+
+[tool.ruff]
+line-length = 100
+src = ["backend/src", "backend/tests", "infra"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+strict = true
+files = ["backend/src"]
