@@ -25,8 +25,8 @@ _Diagram coming in Session 5._
 
 ## Repo layout
 ```
-backend/   FastAPI app, footprint and cost logic, tests
-infra/     AWS CDK stacks
+backend/   FastAPI app, model registry (models.yaml), Dockerfile, tests
+infra/     AWS CDK (TypeScript) stacks: app stack and GitHub OIDC stack
 frontend/  Next.js app
 docs/adr/  Architecture decision records
 scripts/   Offline benchmark and utilities
@@ -35,9 +35,25 @@ scripts/   Offline benchmark and utilities
 ## Getting started
 ```bash
 uv sync                # install backend deps
-uv run pytest          # run tests
+uv run pytest          # run tests (LiteLLM is mocked)
 uv run ruff check .    # lint
+uv run mypy            # type check
+PYTHONPATH=backend/src AWS_PROFILE=thirsty uv run uvicorn thirsty_tokens.app:app --reload  # run locally (real Bedrock calls cost money)
 ```
+
+## Deploy
+Region is eu-north-1 only. One-time setup (owner, manual):
+```bash
+cd infra && npm ci
+export AWS_PROFILE=thirsty
+npx cdk deploy GithubOidcStack      # OIDC provider + deploy role (trust: this repo, main)
+gh variable set AWS_DEPLOY_ROLE_ARN --body <DeployRoleArn output>
+```
+App stack (manual, or automatically on push to main via `.github/workflows/deploy.yml`):
+```bash
+cd infra && npx cdk diff && npx cdk deploy ThirstyTokensStack
+```
+Infra checks: `cd infra && npm ci && npm run lint && npm test && npx cdk synth`.
 
 ## Methodology
 Energy, carbon, and water figures are estimates based on per-tier coefficients. Sources and assumptions will live in `docs/methodology.md`.
