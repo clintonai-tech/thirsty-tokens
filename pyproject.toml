@@ -16,7 +16,7 @@ pythonpath = ["backend/src"]
 
 [tool.ruff]
 line-length = 100
-src = ["backend/src", "backend/tests", "infra"]
+src = ["backend/src", "backend/tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
