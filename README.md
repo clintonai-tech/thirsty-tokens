@@ -1,6 +1,6 @@
 # thirsty-tokens
 
-Compare LLMs on cost, speed, energy, carbon, and water. Built on AWS Bedrock, LiteLLM, and FastAPI.
+Compare LLMs on cost, speed, energy, carbon, and water. Built on AWS Bedrock (eu-north-1), LiteLLM, and FastAPI.
 
 > Status: in development
 
@@ -19,7 +19,7 @@ _Diagram coming in Session 5._
 | Backend | FastAPI + LiteLLM SDK on AWS Lambda |
 | LLM | AWS Bedrock |
 | Storage | DynamoDB (spend cap, rate limits) |
-| IaC | AWS CDK (Python) |
+| IaC | AWS CDK (TypeScript) |
 | CI/CD | GitHub Actions (OIDC) |
 | Observability | Langfuse |
 
