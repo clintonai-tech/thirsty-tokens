@@ -1,3 +1,4 @@
+import logging
 import time
 from functools import lru_cache
 from pathlib import Path
@@ -8,8 +9,11 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from thirsty_tokens.config import MAX_OUTPUT_TOKENS, Settings
+from thirsty_tokens.errors import map_llm_error
 from thirsty_tokens.pricing import cost_usd
 from thirsty_tokens.registry import ModelInfo, Registry
+
+logger = logging.getLogger(__name__)
 
 
 class ChatRequest(BaseModel):
@@ -68,21 +72,27 @@ def chat(
         )
 
     start = time.perf_counter()
-    response = litellm.completion(
-        model=info.litellm_model,
-        messages=[{"role": "user", "content": req.prompt}],
-        max_tokens=MAX_OUTPUT_TOKENS,
-        aws_region_name=settings.aws_region,
-    )
-    latency_ms = round((time.perf_counter() - start) * 1000)
-
-    usage = response.usage
-    if info.pricing is not None:
-        cost = cost_usd(usage.prompt_tokens, usage.completion_tokens, info.pricing)
-    else:
-        cost = float(
-            litellm.completion_cost(completion_response=response, model=info.litellm_model)
+    try:
+        response = litellm.completion(
+            model=info.litellm_model,
+            messages=[{"role": "user", "content": req.prompt}],
+            max_tokens=MAX_OUTPUT_TOKENS,
+            aws_region_name=settings.aws_region,
         )
+        latency_ms = round((time.perf_counter() - start) * 1000)
+
+        usage = response.usage
+        if info.pricing is not None:
+            cost = cost_usd(usage.prompt_tokens, usage.completion_tokens, info.pricing)
+        else:
+            cost = float(
+                litellm.completion_cost(completion_response=response, model=info.litellm_model)
+            )
+    except Exception as exc:
+        # Full detail stays in the server log; the client gets a safe, mapped message.
+        logger.warning("chat failed: model=%s error=%s", info.id, type(exc).__name__, exc_info=True)
+        status, message = map_llm_error(exc)
+        raise HTTPException(status_code=status, detail=message) from exc
 
     return ChatResponse(
         model=info.id,
