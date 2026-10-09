@@ -123,3 +123,8 @@ def test_items_have_ttl_and_no_raw_ip(table: Any) -> None:
     assert len(items) == 2
     assert all(int(i["ttl"]) > int(datetime(2026, 10, 10, tzinfo=UTC).timestamp()) for i in items)
     assert "1.2.3.4" not in str(items)
+
+
+def test_rate_limit_of_zero_blocks_first_request(table: Any) -> None:
+    with pytest.raises(RateLimited):
+        LimitsRepository(table).hit_rate_limit("1.2.3.4", limit=0)

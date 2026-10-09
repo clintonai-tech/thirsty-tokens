@@ -99,6 +99,8 @@ class LimitsRepository:
     def hit_rate_limit(self, ip: str, limit: int) -> None:
         """Count one request for `ip` today; raise RateLimited once `limit` is used up."""
         day, retry_after, ttl = self._day()
+        if limit <= 0:
+            raise RateLimited(retry_after)
         # Store a truncated hash, not the raw IP.
         ip_hash = hashlib.sha256(ip.encode()).hexdigest()[:16]
         try:
