@@ -12,11 +12,13 @@
 |---|---|
 | small | eu.amazon.nova-micro-v1:0 |
 | small | eu.amazon.nova-lite-v1:0 |
-| medium | eu.anthropic.claude-haiku-4-5-20251001-v1:0 |
+| medium | eu.amazon.nova-2-lite-v1:0 |
 | medium | eu.amazon.nova-pro-v1:0 |
 | large | eu.anthropic.claude-sonnet-4-6 |
 
 Notes:
+- Claude Haiku 4.5 was dropped: its AWS Marketplace subscription failed on first use and could not be recovered (it also did not appear under Marketplace subscriptions). Replaced by Nova 2 Lite.
+- Anthropic models need two one-time steps per account before the app can call them: (1) the Anthropic use-case form (account-wide), then (2) a first successful invocation by a principal that has AWS Marketplace permissions (e.g. the admin role in the Bedrock playground). Do step 2 before the Lambda role calls the model, because a failed first attempt by the Lambda role (which has no Marketplace permissions) left the subscription stuck. Each Anthropic model is activated separately.
 - `eu.anthropic.claude-sonnet-5-5` is not available to this account.
 - EU profiles may route across several EU regions, so IAM must allow the underlying foundation-model ARNs in those regions. The SCP only affects calls made by this account's principals, not Bedrock's internal routing, but verify.
 - LiteLLM may lack pricing for EU profile IDs. If so, keep a pricing table in `models.yaml` (per-million input and output token USD) and compute cost from tokens. Add a unit test.

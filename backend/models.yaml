@@ -13,11 +13,11 @@ models:
     provider: amazon
     tier: small
     litellm_model: bedrock/eu.amazon.nova-lite-v1:0
-  - id: claude-haiku-4-5
-    display_name: Claude Haiku 4.5
-    provider: anthropic
+  - id: nova-2-lite
+    display_name: Amazon Nova 2 Lite
+    provider: amazon
     tier: medium
-    litellm_model: bedrock/eu.anthropic.claude-haiku-4-5-20251001-v1:0
+    litellm_model: bedrock/eu.amazon.nova-2-lite-v1:0
   - id: nova-pro
     display_name: Amazon Nova Pro
     provider: amazon
