@@ -1,0 +1,30 @@
+# Model registry. Models are never hardcoded in code.
+# litellm_model: LiteLLM model string (Bedrock EU inference profile).
+# pricing (optional): per-million-token USD override; when absent, LiteLLM's cost map is used
+# (verified present for all five EU profile IDs on 2026-10-08).
+models:
+  - id: nova-micro
+    display_name: Amazon Nova Micro
+    provider: amazon
+    tier: small
+    litellm_model: bedrock/eu.amazon.nova-micro-v1:0
+  - id: nova-lite
+    display_name: Amazon Nova Lite
+    provider: amazon
+    tier: small
+    litellm_model: bedrock/eu.amazon.nova-lite-v1:0
+  - id: nova-2-lite
+    display_name: Amazon Nova 2 Lite
+    provider: amazon
+    tier: medium
+    litellm_model: bedrock/eu.amazon.nova-2-lite-v1:0
+  - id: nova-pro
+    display_name: Amazon Nova Pro
+    provider: amazon
+    tier: medium
+    litellm_model: bedrock/eu.amazon.nova-pro-v1:0
+  - id: claude-sonnet-4-6
+    display_name: Claude Sonnet 4.6
+    provider: anthropic
+    tier: large
+    litellm_model: bedrock/eu.anthropic.claude-sonnet-4-6

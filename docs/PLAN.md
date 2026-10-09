@@ -14,7 +14,7 @@ Browser (Vercel, Next.js) -> Lambda function URL (FastAPI + LiteLLM, container i
 ## Sessions (5 x 2h)
 | # | Focus | Status |
 |---|---|---|
-| 1 | Foundations: docs, repo changes, FastAPI + LiteLLM, CDK TS stack, CI/CD OIDC deploy | todo |
+| 1 | Foundations: docs, repo changes, FastAPI + LiteLLM, CDK TS stack, CI checks, manual deploy | done (deployed and verified; manual deploys, no OIDC; Haiku replaced by Nova 2 Lite) |
 | 2 | Backend core: streaming, footprint, equivalents, spend cap, rate limit, tests | todo |
 | 3 | Frontend: Next.js UI, streaming, metric cards, Vercel deploy | todo |
 | 4 | Compare mode, offline benchmark, chart | todo |

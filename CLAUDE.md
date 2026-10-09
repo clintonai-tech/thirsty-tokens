@@ -7,7 +7,7 @@ Read `docs/PLAN.md` and `docs/CONSTRAINTS.md` at the start of every session. Ses
 - Backend: Python 3.13 (uv), FastAPI, LiteLLM Python SDK (not the proxy), AWS Bedrock
 - Infra: AWS CDK in **TypeScript** (strict), DynamoDB, Lambda (container image, arm64, Lambda Web Adapter)
 - Frontend: Next.js + Tailwind + shadcn/ui on Vercel
-- Observability: Langfuse. CI/CD: GitHub Actions with OIDC
+- Observability: Langfuse. CI/CD: GitHub Actions for checks only; deploys are manual (SCP blocks OIDC)
 
 ## Hard constraints
 - Only region **eu-north-1** is allowed (org SCP). Use `AWS_PROFILE=thirsty`.
@@ -15,6 +15,7 @@ Read `docs/PLAN.md` and `docs/CONSTRAINTS.md` at the start of every session. Ses
 - No always-on resources (NAT gateways, containers, RDS). Budget is the $100 credit, self-cap 50 EUR.
 - Ask before any action that costs money or creates resources outside the CDK stacks.
 - If an SCP denies an action, stop and report the exact error. Never work around it.
+- **Never run `cdk deploy` (or any other command that creates, changes, or destroys AWS resources).** The owner always deploys manually: Claude gives the commands (`cdk diff` first, then `cdk deploy`), the owner reviews the diff and runs them. Claude may run read-only `cdk synth`, and `cdk diff` only if the owner asks.
 
 ## Code rules
 - Typed Python; ruff (lint + format), mypy strict, pytest. TypeScript strict; ESLint, Prettier, Jest.
@@ -33,3 +34,4 @@ Read `docs/PLAN.md` and `docs/CONSTRAINTS.md` at the start of every session. Ses
 ## Commands
 - Backend: `uv sync`, `uv run pytest`, `uv run ruff check .`, `uv run ruff format .`, `uv run mypy`
 - Infra: `cd infra && npm ci && npm test && npx cdk synth`
+- Deploy (owner runs manually, in order): `cd infra && AWS_PROFILE=thirsty npx cdk diff <Stack>`, review, then `AWS_PROFILE=thirsty npx cdk deploy <Stack>`
