@@ -13,6 +13,10 @@ export interface AppStackProps extends cdk.StackProps {
   readonly models?: BedrockModel[];
   /** Placeholder until the Vercel domain exists. */
   readonly corsOrigins?: string[];
+  /** Daily spend cap in USD (CONSTRAINTS.md default: 2). */
+  readonly dailySpendCapUsd?: number;
+  /** Per-IP daily request limit (CONSTRAINTS.md default: 30). */
+  readonly dailyRequestLimit?: number;
 }
 
 export class ThirstyTokensStack extends cdk.Stack {
@@ -48,10 +52,12 @@ export class ThirstyTokensStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       logGroup,
       environment: {
-        // Lambda Web Adapter: enable response streaming for Session 2.
+        // Lambda Web Adapter: response streaming for /chat/stream.
         AWS_LWA_INVOKE_MODE: 'response_stream',
         TT_AWS_REGION: 'eu-north-1',
-        TABLE_NAME: this.table.tableName,
+        TT_TABLE_NAME: this.table.tableName,
+        TT_DAILY_SPEND_CAP_USD: String(props.dailySpendCapUsd ?? 2),
+        TT_DAILY_REQUEST_LIMIT: String(props.dailyRequestLimit ?? 30),
         HOME: '/tmp',
       },
     });
