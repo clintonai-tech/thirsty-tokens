@@ -15,7 +15,7 @@ Browser (Vercel, Next.js) -> Lambda function URL (FastAPI + LiteLLM, container i
 | # | Focus | Status |
 |---|---|---|
 | 1 | Foundations: docs, repo changes, FastAPI + LiteLLM, CDK TS stack, CI checks, manual deploy | done (deployed and verified; manual deploys, no OIDC; Haiku replaced by Nova 2 Lite) |
-| 2 | Backend core: streaming, footprint, equivalents, spend cap, rate limit, tests | todo |
+| 2 | Backend core: streaming, footprint, equivalents, spend cap, rate limit, tests | code done and checks pass; deploy and curl verification pending (owner deploys) |
 | 3 | Frontend: Next.js UI, streaming, metric cards, Vercel deploy | todo |
 | 4 | Compare mode, offline benchmark, chart | todo |
 | 5 | Langfuse, hardening, kill switch, README, methodology, diagram, ADRs | todo |
