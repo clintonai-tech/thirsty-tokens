@@ -20,13 +20,13 @@ _Diagram coming in Session 5._
 | LLM | AWS Bedrock |
 | Storage | DynamoDB (spend cap, rate limits) |
 | IaC | AWS CDK (TypeScript) |
-| CI/CD | GitHub Actions (OIDC) |
+| CI/CD | GitHub Actions (checks only); manual `cdk deploy` |
 | Observability | Langfuse |
 
 ## Repo layout
 ```
 backend/   FastAPI app, model registry (models.yaml), Dockerfile, tests
-infra/     AWS CDK (TypeScript) stacks: app stack and GitHub OIDC stack
+infra/     AWS CDK (TypeScript) app stack
 frontend/  Next.js app
 docs/adr/  Architecture decision records
 scripts/   Offline benchmark and utilities
@@ -42,16 +42,12 @@ PYTHONPATH=backend/src AWS_PROFILE=thirsty uv run uvicorn thirsty_tokens.app:app
 ```
 
 ## Deploy
-Region is eu-north-1 only. One-time setup (owner, manual):
+Region is eu-north-1 only. Deploys are manual (see [ADR-0006](docs/adr/0006-manual-deploys-no-oidc.md)):
 ```bash
 cd infra && npm ci
 export AWS_PROFILE=thirsty
-npx cdk deploy GithubOidcStack      # OIDC provider + deploy role (trust: this repo, main)
-gh variable set AWS_DEPLOY_ROLE_ARN --body <DeployRoleArn output>
-```
-App stack (manual, or automatically on push to main via `.github/workflows/deploy.yml`):
-```bash
-cd infra && npx cdk diff && npx cdk deploy ThirstyTokensStack
+npx cdk diff ThirstyTokensStack     # review the changes first
+npx cdk deploy ThirstyTokensStack   # needs Docker running; prints FunctionUrl
 ```
 Infra checks: `cd infra && npm ci && npm run lint && npm test && npx cdk synth`.
 
