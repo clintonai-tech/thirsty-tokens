@@ -13,3 +13,6 @@ class Settings(BaseSettings):
     aws_region: str = "eu-north-1"  # org SCP only allows eu-north-1
     max_input_chars: int = 2000
     models_path: Path = DEFAULT_MODELS_PATH
+    table_name: str | None = None  # DynamoDB table for limits; None disables limits (local dev)
+    daily_spend_cap_usd: float = 2.0
+    daily_request_limit: int = 30

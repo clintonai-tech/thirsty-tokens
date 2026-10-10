@@ -25,7 +25,7 @@ def mock_litellm(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         )
 
     monkeypatch.setattr(app_module.litellm, "completion", fake_completion)
-    monkeypatch.setattr(app_module.litellm, "completion_cost", lambda **_: 0.00123)
+    monkeypatch.setattr(app_module.litellm, "cost_per_token", lambda **_: (0.001, 0.00023))
     return calls
 
 

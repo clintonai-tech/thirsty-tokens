@@ -40,6 +40,34 @@ test('lambda is arm64 container image, 512MB, 30s, streaming env', () => {
   });
 });
 
+test('limits are configured via env vars pointing at the table', () => {
+  template.hasResourceProperties('AWS::Lambda::Function', {
+    Environment: {
+      Variables: Match.objectLike({
+        TT_TABLE_NAME: { Ref: Match.stringLikeRegexp('^Table') },
+        TT_DAILY_SPEND_CAP_USD: '2',
+        TT_DAILY_REQUEST_LIMIT: '30',
+      }),
+    },
+  });
+});
+
+test('limit settings can be overridden through props', () => {
+  const custom = new ThirstyTokensStack(new cdk.App(), 'Custom', {
+    env: { account: '123456789012', region: 'eu-north-1' },
+    dailySpendCapUsd: 0.5,
+    dailyRequestLimit: 5,
+  });
+  Template.fromStack(custom).hasResourceProperties('AWS::Lambda::Function', {
+    Environment: {
+      Variables: Match.objectLike({
+        TT_DAILY_SPEND_CAP_USD: '0.5',
+        TT_DAILY_REQUEST_LIMIT: '5',
+      }),
+    },
+  });
+});
+
 test('log retention is 14 days', () => {
   template.hasResourceProperties('AWS::Logs::LogGroup', { RetentionInDays: 14 });
 });
