@@ -22,3 +22,4 @@ cdk.context.json
 .idea/
 .vscode/
 .claude/settings.local.json
+!.env.example
