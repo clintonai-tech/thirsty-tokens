@@ -79,6 +79,18 @@ test('function URL streams and is CORS-restricted', () => {
   });
 });
 
+test('production frontend origin is added to CORS when provided', () => {
+  const custom = new ThirstyTokensStack(new cdk.App(), 'CorsStack', {
+    env: { account: '123456789012', region: 'eu-north-1' },
+    corsOrigins: ['http://localhost:3000', 'https://thirsty-tokens.vercel.app'],
+  });
+  Template.fromStack(custom).hasResourceProperties('AWS::Lambda::Url', {
+    Cors: Match.objectLike({
+      AllowOrigins: ['http://localhost:3000', 'https://thirsty-tokens.vercel.app'],
+    }),
+  });
+});
+
 test('bedrock access is scoped: no wildcard resources, foundation models need our profiles', () => {
   const policies = template.findResources('AWS::IAM::Policy');
   const statements = Object.values(policies).flatMap(

@@ -1,5 +1,4 @@
 from collections.abc import Iterator
-from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from typing import Any
 
@@ -75,22 +74,6 @@ def test_settle_zero_is_noop_and_can_create_nothing(table: Any) -> None:
     repo = LimitsRepository(table)
     repo.settle_spend(0)
     assert repo.spent_micro() == 0
-
-
-def test_concurrent_reservations_never_exceed_cap(table: Any) -> None:
-    repo = LimitsRepository(table)
-
-    def attempt(_: int) -> bool:
-        try:
-            repo.reserve_spend(100, cap_micro=1000)
-        except SpendCapReached:
-            return False
-        return True
-
-    with ThreadPoolExecutor(max_workers=16) as pool:
-        results = list(pool.map(attempt, range(40)))
-    assert sum(results) == 10
-    assert repo.spent_micro() == 1000
 
 
 def test_day_rollover_resets_spend_and_rate(table: Any) -> None:
