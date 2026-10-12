@@ -14,7 +14,7 @@
 - **Errors from Bedrock are mapped to 4xx/5xx with safe messages** (`errors.py`); the raw error stays in CloudWatch.
 
 ## Session 2: Backend core
-- **Reserve-then-settle beats check-then-add.** A conditional `ADD` on the counter is atomic, so concurrent requests cannot jointly overshoot the cap (ADR-0007). A 16-thread test against moto proves exactly cap/amount reservations succeed.
+- **Reserve-then-settle beats check-then-add.** A conditional `ADD` on the counter is atomic, so concurrent requests cannot jointly overshoot the cap (ADR-0007). Atomicity rests on DynamoDB's conditional-write guarantee; a threaded test against moto was removed because moto is not atomic across threads (it let 11 of 10 through in CI), so it tested the fake, not our code. Sequential boundary tests cover the cap logic.
 - **Edge cases show up in tests of the wrapper, not the unit.** `limit=0` let the first request through because the DynamoDB condition `attribute_not_exists(hits)` is true on a fresh item. Found by an API-level test, fixed in the repository.
 - **Open the stream and read the first chunk before returning `StreamingResponse`.** Once the response starts, the status is already 200. Pre-reading means Bedrock failures (access denied, throttling) still return real 4xx/5xx; only mid-stream failures become `error` events.
 - **Client IP comes from `x-amzn-request-context`** (set by Lambda Web Adapter from the function URL event), not `X-Forwarded-For`. A test proves a spoofed forwarded header gets no fresh quota. Confirmed on the deployed URL: a request sent with fake `X-Forwarded-For: 7.7.7.7` and `x-amzn-request-context` (sourceIp 9.9.9.9) was counted under the real caller's hash, and neither fake hash appears in DynamoDB.
