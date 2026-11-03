@@ -20,3 +20,14 @@
 - **Client IP comes from `x-amzn-request-context`** (set by Lambda Web Adapter from the function URL event), not `X-Forwarded-For`. A test proves a spoofed forwarded header gets no fresh quota. Confirmed on the deployed URL: a request sent with fake `X-Forwarded-For: 7.7.7.7` and `x-amzn-request-context` (sourceIp 9.9.9.9) was counted under the real caller's hash, and neither fake hash appears in DynamoDB.
 - **Sources for footprint are thin and disagree by up to 5x** (Epoch ~0.0006 Wh/token vs ~0.003 for Claude in arXiv 2505.09598). Coefficients are tier assumptions, documented in ADR-0008. AWS reports on-site WUE only; the off-site water factor is US-weighted.
 - **One cost path.** `/chat` and `/chat/stream` both price through `estimate_cost` (models.yaml override, else `litellm.cost_per_token`), which also prices the worst case for the reservation. `completion_cost` was dropped because it needs a full response object, which a stream does not provide.
+
+## Session 3: Frontend
+- **CORS is not a security control.** It only tells browsers which sites may read a response; `curl` ignores it, and the function URL is public anyway. What protects the budget is the spend cap, the per-IP limit and the server-side token cap. The origin is a constant in `infra/bin/app.ts` so a plain deploy keeps it (ADR-0009).
+- **`EventSource` cannot POST**, so streaming uses `fetch` plus a reader and a small pure SSE parser, tested with events split across chunks.
+- **Tests catch formatting bugs early**: a `trim` helper that stripped trailing zeros turned "150" into "15"; a unit test found it before users did.
+- **Check what generators install.** `shadcn init` added a stray npm package named `cn` (the import should be `@/lib/utils`) and the whole shadcn CLI as a runtime dependency. The CLI dragged in most of the production audit findings; removing it left 0.
+- **Moto is not thread-safe**, so a 16-thread test against it flaked (11 of 10 reservations) and tested the fake, not our code. Dropped; atomicity is DynamoDB's conditional-write guarantee.
+- **Vercel gotchas**: production builds `main`, so the first deploy 404s until the frontend is merged; "Git information retrieval failed" was GitHub's secondary rate limit (wait, redeploy); a 404 `NOT_FOUND` on a "Ready" deployment points at framework preset or root directory.
+- **Model output is untrusted.** Answers are rendered with `react-markdown`, which ignores raw HTML; a test checks a `<script>` tag does not render. Jest needs the ESM-only markdown packages transformed.
+- **Dependencies age in weeks.** Next 16.4.0 gained critical advisories between sessions; `npm audit --omit=dev` is a cheap check before each session.
+- **Cold start is user-visible**: after weeks idle the first call returned 502 then took 18s. The client retries once on 502/503/504. A real fix (lazy `litellm` import or more memory) is Session 5.
