@@ -67,3 +67,20 @@ describe("Chat", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("used up today's budget");
   });
 });
+
+describe("Chat markdown", () => {
+  it("renders markdown instead of showing raw markers, and ignores raw HTML", async () => {
+    mocked.streamChat.mockImplementation(async ({ onToken }) => {
+      onToken("## Midterms\n\n- **Held** in November\n\n<script>alert(1)</script>");
+      throw new ApiError("unavailable", "x");
+    });
+    const { container } = render(<Chat />);
+    await screen.findByRole("option", { name: "Amazon Nova Micro" });
+    await userEvent.type(screen.getByLabelText("Prompt"), "when");
+    await userEvent.click(screen.getByRole("button", { name: "Ask the model" }));
+    expect(await screen.findByRole("heading", { name: "Midterms" })).toBeInTheDocument();
+    expect(screen.getByText("Held").tagName).toBe("STRONG");
+    expect(screen.getByRole("listitem")).toBeInTheDocument();
+    expect(container.querySelector("script")).toBeNull();
+  });
+});

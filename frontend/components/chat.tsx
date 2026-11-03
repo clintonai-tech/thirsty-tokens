@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { Markdown } from "@/components/markdown";
 import { Results } from "@/components/results";
 import { WaterGlass } from "@/components/water-glass";
 import { Button } from "@/components/ui/button";
@@ -197,12 +198,12 @@ export function Chat() {
             <h2 id="answer-heading" className="font-display text-lg font-semibold">
               Answer
             </h2>
-            <p className="mt-2 max-w-prose whitespace-pre-wrap text-lg leading-relaxed">
-              {answer}
+            <div className="mt-2 max-w-prose text-lg leading-relaxed">
+              <Markdown text={answer} />
               {status === "streaming" && (
-                <span aria-hidden className="ml-0.5 inline-block h-5 w-2 bg-tide align-middle" />
+                <span aria-hidden className="inline-block h-5 w-2 bg-tide align-middle" />
               )}
-            </p>
+            </div>
           </section>
         )}
 
