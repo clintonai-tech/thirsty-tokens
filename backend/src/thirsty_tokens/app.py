@@ -36,6 +36,15 @@ class ChatRequest(BaseModel):
     prompt: str = Field(min_length=1)
 
 
+class PublicModel(BaseModel):
+    """What the UI needs; provider routing and pricing overrides stay server-side."""
+
+    id: str
+    display_name: str
+    provider: str
+    tier: str
+
+
 class ChatResponse(BaseModel):
     model: str
     text: str
@@ -108,8 +117,11 @@ def health() -> dict[str, str]:
 
 
 @app.get("/models")
-def models(registry: Annotated[Registry, Depends(get_registry)]) -> list[ModelInfo]:
-    return registry.list()
+def models(registry: Annotated[Registry, Depends(get_registry)]) -> list[PublicModel]:
+    return [
+        PublicModel(id=m.id, display_name=m.display_name, provider=m.provider, tier=m.tier)
+        for m in registry.list()
+    ]
 
 
 def _admit(
