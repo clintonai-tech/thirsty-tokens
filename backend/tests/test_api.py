@@ -39,7 +39,7 @@ def test_models_lists_registry(client: TestClient) -> None:
     r = client.get("/models")
     assert r.status_code == 200
     assert len(r.json()) == 5
-    assert {"id", "display_name", "provider", "tier"} <= r.json()[0].keys()
+    assert set(r.json()[0]) == {"id", "display_name", "provider", "tier"}  # no routing or pricing
 
 
 def test_chat_maps_tokens_cost_and_latency(
