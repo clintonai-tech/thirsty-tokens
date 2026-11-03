@@ -36,6 +36,21 @@ export function messageFor(kind: ApiErrorKind): string {
   return MESSAGES[kind];
 }
 
+const RETRY_STATUSES = new Set([502, 503, 504]);
+const RETRY_DELAY_MS = 2000;
+
+/**
+ * fetch with one retry on a gateway error. The first request after an idle period can fail
+ * with a 502 while the Lambda finishes starting; the retry then lands on a warm function.
+ */
+async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+  const res = await fetch(url, init);
+  if (!RETRY_STATUSES.has(res.status)) return res;
+  await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+  if (init.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  return fetch(url, init);
+}
+
 async function errorFromResponse(res: Response): Promise<ApiError> {
   let reason: unknown;
   try {
@@ -55,7 +70,7 @@ async function errorFromResponse(res: Response): Promise<ApiError> {
 export async function fetchModels(signal?: AbortSignal): Promise<ModelInfo[]> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}/models`, { signal });
+    res = await fetchWithRetry(`${API_URL}/models`, { signal });
   } catch {
     throw new ApiError("network", MESSAGES.network);
   }
@@ -79,7 +94,7 @@ export async function streamChat({
 }: StreamOptions): Promise<ChatResult> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}/chat/stream`, {
+    res = await fetchWithRetry(`${API_URL}/chat/stream`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ model, prompt }),

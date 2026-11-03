@@ -61,12 +61,38 @@ describe("streamChat", () => {
     });
   });
 
-  it("maps 5xx to unavailable and a failed fetch to network", async () => {
-    jest.spyOn(global, "fetch").mockResolvedValueOnce(errorResponse(503, {}));
+  it("retries once on a 502 and succeeds when the function is warm", async () => {
+    jest.useFakeTimers();
+    const fetchMock = jest
+      .spyOn(global, "fetch")
+      .mockResolvedValueOnce(errorResponse(502, {}))
+      .mockResolvedValueOnce(sseResponse([`event: done\ndata: ${JSON.stringify(DONE)}\n\n`]));
+    const pending = streamChat({ model: "m", prompt: "p", onToken: () => {} });
+    await jest.advanceTimersByTimeAsync(2000);
+    await expect(pending).resolves.toMatchObject({ output_tokens: 7 });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
+  it("maps a persistent 503 to unavailable after one retry", async () => {
+    jest.useFakeTimers();
+    const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue(errorResponse(503, {}));
+    const pending = expect(
+      streamChat({ model: "m", prompt: "p", onToken: () => {} }),
+    ).rejects.toMatchObject({ kind: "unavailable" });
+    await jest.advanceTimersByTimeAsync(2000);
+    await pending;
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
+  it("does not retry client errors, and maps a failed fetch to network", async () => {
+    const fetchMock = jest.spyOn(global, "fetch").mockResolvedValueOnce(errorResponse(422, {}));
     await expect(streamChat({ model: "m", prompt: "p", onToken: () => {} })).rejects.toMatchObject({
-      kind: "unavailable",
+      kind: "invalid",
     });
-    jest.spyOn(global, "fetch").mockRejectedValueOnce(new TypeError("failed"));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    fetchMock.mockRejectedValueOnce(new TypeError("failed"));
     await expect(streamChat({ model: "m", prompt: "p", onToken: () => {} })).rejects.toBeInstanceOf(
       ApiError,
     );
